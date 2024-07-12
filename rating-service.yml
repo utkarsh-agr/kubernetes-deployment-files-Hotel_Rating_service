@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rating-service-app
+  labels:
+    app: rating-service-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rating-service-app
+  template:
+    metadata:
+      labels:
+        app: rating-service-app
+    spec:
+      containers:
+        - name: rating-service-app
+          image: utkarshagrawal1/ratingservice:0.0.1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8083
+          env:
+          - name:  DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name:  mysql-secret
+                key:  password
+            
+          - name:  DB_HOST
+            valueFrom:
+              configMapKeyRef:
+                name: db-config
+                key: host
+
+          - name:  RATING_DB
+            valueFrom:
+              configMapKeyRef:
+                name: db-config
+                key: ratingdb
+                  
+          - name: DB_USER
+            value: root
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rating-service-svc
+spec:
+  ports:
+    - targetPort: 8083
+      port: 80
+  selector:
+    app: rating-service-app

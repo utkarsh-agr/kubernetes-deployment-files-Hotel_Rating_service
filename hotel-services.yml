@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hotel-services-app
+  labels:
+    app: hotel-services-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hotel-services-app
+  template:
+    metadata:
+      labels:
+        app: hotel-services-app
+    spec:
+      containers:
+        - name: hotel-services-app
+          image: utkarshagrawal1/hotelservices:0.0.1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8084
+          env:
+            - name:  DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name:  mysql-secret
+                  key:  password
+            
+            - name:  DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: db-config
+                  key: host
+
+            - name:  HOTEL_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: db-config
+                  key: hoteldb
+                  
+            - name: DB_USER
+              value: root                  
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hotel-services-svc
+spec:
+  ports:
+    - targetPort: 8084
+      port: 80
+  selector:
+    app: hotel-services-app
